@@ -19,16 +19,16 @@ extern "C" {
 
 //  @interface
 //  Create a new consumer
-KAFKAEZQ_EXPORT consumer_t *
-    consumer_new (void);
+KAFKAEZQ_EXPORT kz_consumer_t *
+    kz_consumer_new ();
 
 //  Destroy the consumer
 KAFKAEZQ_EXPORT void
-    consumer_destroy (consumer_t **self_p);
+    kz_consumer_destroy (kz_consumer_t **self_p);
 
 //  Self test of this class
 KAFKAEZQ_EXPORT void
-    consumer_test (bool verbose);
+    kz_consumer_test (bool verbose);
 
 //  @end
 
