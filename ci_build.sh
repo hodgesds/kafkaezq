@@ -62,7 +62,7 @@ if [ "$BUILD_TYPE" == "default" ]; then
     make -j4
     make install
     cd ..
-    git clone --quiet --depth 1 https://github.com/edenhill/librdkafka rdkafka
+    git clone --quiet https://github.com/edenhill/librdkafka rdkafka
     cd rdkafka
     git checkout tags/0.8.6
     git --no-pager log --oneline -n1
