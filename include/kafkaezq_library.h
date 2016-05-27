@@ -21,6 +21,7 @@
 //  Set up environment for the application
 
 //  External dependencies
+#include <sodium.h>
 #include <czmq.h>
 #include <librdkafka/rdkafka.h>
 #include <libfastjson/json.h>

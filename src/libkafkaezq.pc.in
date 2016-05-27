@@ -12,7 +12,7 @@ Name: libkafkaezq
 Description: kafka to zeromq pub-sub
 Version: @VERSION@
 
-Requires:libzmq libczmq rdkafka libfastjson
+Requires:libsodium libzmq libczmq rdkafka libfastjson
 
 Libs: -L${libdir} -lkafkaezq
 Cflags: -I${includedir} @pkg_config_defines@

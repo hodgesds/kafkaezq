@@ -74,6 +74,17 @@ list(APPEND CMAKE_MODULE_PATH "${SOURCE_DIR}")
 set(OPTIONAL_LIBRARIES)
 
 ########################################################################
+# LIBSODIUM dependency
+########################################################################
+find_package(libsodium REQUIRED)
+IF (LIBSODIUM_FOUND)
+    include_directories(${LIBSODIUM_INCLUDE_DIRS})
+    list(APPEND MORE_LIBRARIES ${LIBSODIUM_LIBRARIES})
+ELSE (LIBSODIUM_FOUND)
+    message( FATAL_ERROR "libsodium not found." )
+ENDIF (LIBSODIUM_FOUND)
+
+########################################################################
 # LIBZMQ dependency
 ########################################################################
 find_package(libzmq REQUIRED)
@@ -201,6 +212,7 @@ add_executable(
 target_link_libraries(
     kafkaezq
     kafkaezq
+    ${LIBSODIUM_LIBRARIES}
     ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
     ${RDKAFKA_LIBRARIES}
@@ -218,6 +230,7 @@ add_executable(
 target_link_libraries(
     kafkaezq_selftest
     kafkaezq
+    ${LIBSODIUM_LIBRARIES}
     ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
     ${RDKAFKA_LIBRARIES}

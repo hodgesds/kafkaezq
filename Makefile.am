@@ -10,13 +10,14 @@ AM_CFLAGS = \
 
 
 AM_CPPFLAGS = \
+    ${libsodium_CFLAGS} \
     ${libzmq_CFLAGS} \
     ${czmq_CFLAGS} \
     ${rdkafka_CFLAGS} \
     ${libfastjson_CFLAGS} \
     -I$(srcdir)/include
 
-project_libs = ${libzmq_LIBS} ${czmq_LIBS} ${rdkafka_LIBS} ${libfastjson_LIBS}
+project_libs = ${libsodium_LIBS} ${libzmq_LIBS} ${czmq_LIBS} ${rdkafka_LIBS} ${libfastjson_LIBS}
 
 SUBDIRS = doc
 DIST_SUBDIRS = doc
@@ -29,6 +30,7 @@ TESTS =
 
 EXTRA_DIST = \
     CMakeLists.txt \
+    Findlibsodium.cmake \
     Findlibzmq.cmake \
     Findczmq.cmake \
     Findrdkafka.cmake \

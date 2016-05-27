@@ -8,6 +8,7 @@
 	<include filename = "license.xml" />
 	<version major = "0" minor = "1" patch = "0" />
 
+    <use project = "libsodium" />
     <use project = "czmq" />
     <use project = "rdkafka" />
     <use project = "libfastjson" />
