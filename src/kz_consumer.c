@@ -57,6 +57,9 @@ kz_consumer_new ()
     return self;
 }
 
+//  --------------------------------------------------------------------------
+//  Set error callback
+
 void
 kz_consumer_set_error_callback (kz_consumer_t *self, void (*error_cb) (rd_kafka_t *rk, int err, const char *reason, void *opaque))
 {
