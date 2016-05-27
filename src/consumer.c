@@ -22,7 +22,11 @@
 //  Structure of our class
 
 struct _consumer_t {
-    int filler;     //  Declare class properties here
+    rd_kafka_t *rk;                                 // kafka handle 
+    rd_kafka_conf_t *rk_conf;                       // kafka config
+    rd_kafka_topic_conf_t *rk_topic_conf;           // kafka topic config
+    rd_kafka_topic_partition_list_t *rk_topics;     // kafka topics
+    char rk_errstr[512];                            // kafka error string
 };
 
 
@@ -34,7 +38,12 @@ consumer_new (void)
 {
     consumer_t *self = (consumer_t *) zmalloc (sizeof (consumer_t));
     assert (self);
-    //  Initialize class properties here
+
+    self->rk = rd_kafka_new (RD_KAFKA_CONSUMER, self->rk_conf, self->rk_errstr, sizeof(self->rk_errstr));
+    self->rk_conf = rd_kafka_conf_new ();
+    self->rk_topic_conf = rd_kafka_topic_conf_new ();
+    assert (self->rk);
+
     return self;
 }
 
@@ -48,7 +57,12 @@ consumer_destroy (consumer_t **self_p)
     assert (self_p);
     if (*self_p) {
         consumer_t *self = *self_p;
-        //  Free class properties here
+        if (self->rk_topics)
+            rd_kafka_topic_partition_list_destroy (self->rk_topics);
+       
+        if (self->rk) 
+            rd_kafka_destroy (self->rk);
+
         //  Free object itself
         free (self);
         *self_p = NULL;
