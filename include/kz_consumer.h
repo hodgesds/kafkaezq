@@ -22,6 +22,10 @@ extern "C" {
 KAFKAEZQ_EXPORT kz_consumer_t *
     kz_consumer_new ();
 
+//  Set error callback
+KAFKAEZQ_EXPORT void
+    kz_consumer_set_error_callback (kz_consumer_t *self, void (*error_cb) (rd_kafka_t *rk, int err, const char *reason, void *opaque));
+
 //  Destroy the consumer
 KAFKAEZQ_EXPORT void
     kz_consumer_destroy (kz_consumer_t **self_p);
