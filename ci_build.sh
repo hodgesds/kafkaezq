@@ -64,6 +64,7 @@ if [ "$BUILD_TYPE" == "default" ]; then
     cd ..
     git clone --quiet --depth 1 https://github.com/edenhill/librdkafka rdkafka
     cd rdkafka
+    git checkout tags/0.8.6
     git --no-pager log --oneline -n1
     if [ -e autogen.sh ]; then
         ./autogen.sh 2> /dev/null
