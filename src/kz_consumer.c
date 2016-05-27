@@ -34,7 +34,7 @@ struct _kz_consumer_t {
 static void 
 s_err_callback (rd_kafka_t *rk, int err, const char *reason, void *opaque)
 {
-    const char *errstr = rd_kafka_err2str (err);
+    const char *errstr = rd_kafka_err2str (rd_kafka_errno2err(err));
 	printf("%% ERROR CALLBACK: %s: %s: %s\n",
 	       rd_kafka_name(rk), errstr, reason);
 }
