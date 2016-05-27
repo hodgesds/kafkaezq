@@ -1,0 +1,25 @@
+Name(7)
+=======
+
+
+NAME
+----
+kafkaezq - kafka to zeromq pub-sub
+
+
+SYNOPSIS
+--------
+----
+#include <kafkaezq.h>
+
+cc ['flags'] 'files' -lkafkaezq ['libraries']
+----
+
+
+DESCRIPTION
+-----------
+
+Classes
+~~~~~~~
+
+Something.
