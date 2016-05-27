@@ -1,0 +1,19 @@
+<project
+    name = "kafkaezq"
+    description = "kafka to zeromq pub-sub"
+    script = "zproject.gsl"
+    email = "taotetek@gmail.com"
+	>
+
+	<include filename = "license.xml" />
+	<version major = "0" minor = "1" patch = "0" />
+
+    <use project = "czmq" />
+    <use project = "rdkafka" />
+    <use project = "libfastjson" />
+
+    <class name = "consumer" />
+
+    <main name = "kafkaezq" />
+
+</project>
