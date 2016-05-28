@@ -24,7 +24,7 @@ KAFKAEZQ_EXPORT ksock_t *
 
 // Connect the ksock
 KAFKAEZQ_EXPORT void
-    ksock_connect (ksock_t *self);
+    ksock_connect (ksock_t *self, char *brokers);
 
 //  Destroy the ksock
 KAFKAEZQ_EXPORT void
