@@ -22,7 +22,7 @@
 //  Structure of our class
 
 struct _ksock_t {
-    rd_kafka_t *rk;                                 // kafka handle 
+    rd_kafka_t *rk;
     rd_kafka_conf_t *rk_conf;
     rd_kafka_topic_conf_t *rkt_conf;
     rd_kafka_topic_partition_list_t *topiclist;
@@ -35,7 +35,10 @@ struct _ksock_t {
     char errstr[512];
 };
 
-/*
+
+//  --------------------------------------------------------------------------
+//  Default error callback
+
 static void 
 s_err_callback (rd_kafka_t *rk, int err, const char *reason, void *opaque)
 {
@@ -43,7 +46,10 @@ s_err_callback (rd_kafka_t *rk, int err, const char *reason, void *opaque)
 	printf("%% ERROR CALLBACK: %s: %s: %s\n",
 	       rd_kafka_name(rk), errstr, reason);
 }
-*/
+
+
+//  --------------------------------------------------------------------------
+//  Default rebalance callback
 
 static void
 rebalance_cb (rd_kafka_t *rk, rd_kafka_resp_err_t err, rd_kafka_topic_partition_list_t *partitions, void *opaque)
@@ -88,8 +94,25 @@ ksock_new ()
 }
 
 void
-ksock_connect (ksock_t *self)
+ksock_connect (ksock_t *self, char *brokers)
 {
+    int rc = rd_kafka_conf_set (self->rk_conf, "metadata.broker.list", brokers, self->errstr, sizeof (self->errstr));
+    assert (rc == RD_KAFKA_CONF_OK);
+
+    rd_kafka_conf_set_error_cb (self->rk_conf, s_err_callback);
+    assert (rc == RD_KAFKA_CONF_OK);
+
+    struct timeval tv;
+	gettimeofday(&tv, NULL);
+	srand(tv.tv_usec);
+
+    char tmp[16];
+    snprintf (tmp, sizeof (tmp), "%i", SIGIO);
+
+    rd_kafka_conf_set(self->rk_conf, "internal.termination.signal", tmp, NULL, 0);
+    
+    rd_kafka_conf_set_log_cb(self->rk_conf, rd_kafka_log_print);
+
     self->rk = rd_kafka_new (RD_KAFKA_CONSUMER, self->rk_conf, self->errstr, sizeof (self->errstr));
     assert (self->rk);
     
@@ -131,7 +154,7 @@ ksock_test (bool verbose)
     ksock_t *self = ksock_new ();
     assert (self);
 
-    ksock_connect (self);
+    ksock_connect (self, "localhost");
     ksock_destroy (&self);
     //  @end
     printf ("OK\n");
