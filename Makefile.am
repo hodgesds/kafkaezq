@@ -35,6 +35,7 @@ EXTRA_DIST = \
     Findczmq.cmake \
     Findrdkafka.cmake \
     Findlibfastjson.cmake \
+    LICENSE \
     src/kafkaezq_classes.h
 
 include $(srcdir)/src/Makemodule.am

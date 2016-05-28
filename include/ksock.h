@@ -1,5 +1,5 @@
 /*  =========================================================================
-    consumer - class description
+    ksock - class description
 
     Copyright (c) the Contributors as noted in the AUTHORS file.       
     This file is part of kafkaezq.                                     
@@ -10,29 +10,29 @@
     =========================================================================
 */
 
-#ifndef CONSUMER_H_INCLUDED
-#define CONSUMER_H_INCLUDED
+#ifndef KSOCK_H_INCLUDED
+#define KSOCK_H_INCLUDED
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 //  @interface
-//  Create a new consumer
-KAFKAEZQ_EXPORT kz_consumer_t *
-    kz_consumer_new ();
+//  Create a new ksock
+KAFKAEZQ_EXPORT ksock_t *
+    ksock_new (void);
 
-//  Set error callback
+// Connect the ksock
 KAFKAEZQ_EXPORT void
-    kz_consumer_set_error_callback (kz_consumer_t *self, void (*error_cb) (rd_kafka_t *rk, int err, const char *reason, void *opaque));
+    ksock_connect (ksock_t *self);
 
-//  Destroy the consumer
+//  Destroy the ksock
 KAFKAEZQ_EXPORT void
-    kz_consumer_destroy (kz_consumer_t **self_p);
+    ksock_destroy (ksock_t **self_p);
 
 //  Self test of this class
 KAFKAEZQ_EXPORT void
-    kz_consumer_test (bool verbose);
+    ksock_test (bool verbose);
 
 //  @end
 

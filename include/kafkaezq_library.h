@@ -56,14 +56,14 @@
 //  These classes are stable or legacy and built in all releases
 //  Draft classes are by default not built in stable releases
 #ifdef KAFKAEZQ_BUILD_DRAFT_API
-typedef struct _kz_consumer_t kz_consumer_t;
-#define KZ_CONSUMER_T_DEFINED
+typedef struct _ksock_t ksock_t;
+#define KSOCK_T_DEFINED
 #endif // KAFKAEZQ_BUILD_DRAFT_API
 
 
 //  Public classes, each with its own header file
 #ifdef KAFKAEZQ_BUILD_DRAFT_API
-#include "kz_consumer.h"
+#include "ksock.h"
 #endif // KAFKAEZQ_BUILD_DRAFT_API
 
 #endif

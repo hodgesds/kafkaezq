@@ -4,7 +4,7 @@ Name(7)
 
 NAME
 ----
-kz_consumer - consumes from a kafka topic
+ksock - consumes from a kafka topic
 
 
 SYNOPSIS

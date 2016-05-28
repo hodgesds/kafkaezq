@@ -13,7 +13,7 @@
     <use project = "rdkafka" />
     <use project = "libfastjson" />
 
-    <class name = "kz_consumer" />
+    <class name = "ksock" />
 
     <main name = "kafkaezq" />
 
