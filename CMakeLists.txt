@@ -138,7 +138,7 @@ set (kafkaezq_headers
 
 IF (ENABLE_DRAFTS)
     list(APPEND kafkaezq_headers
-        include/kz_consumer.h
+        include/ksock.h
     )
 ENDIF (ENABLE_DRAFTS)
 
@@ -154,7 +154,7 @@ set (kafkaezq_sources
 
 IF (ENABLE_DRAFTS)
     list (APPEND kafkaezq_sources
-        src/kz_consumer.c
+        src/ksock.c
     )
 ENDIF (ENABLE_DRAFTS)
 
@@ -253,7 +253,7 @@ set(TEST_CLASSES
 
 IF (ENABLE_DRAFTS)
     list (APPEND TEST_CLASSES
-    kz_consumer
+    ksock
     )
 ENDIF (ENABLE_DRAFTS)
 

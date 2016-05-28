@@ -28,7 +28,7 @@ typedef struct {
 static test_item_t
 all_tests [] = {
 #ifdef KAFKAEZQ_BUILD_DRAFT_API
-    { "kz_consumer", kz_consumer_test },
+    { "ksock", ksock_test },
 #endif // KAFKAEZQ_BUILD_DRAFT_API
     {0, 0}          //  Sentinel
 };
@@ -94,7 +94,7 @@ main (int argc, char **argv)
         if (streq (argv [argn], "--list")
         ||  streq (argv [argn], "-l")) {
             puts ("Available tests:");
-            puts ("    kz_consumer");
+            puts ("    ksock");
             return 0;
         }
         else
