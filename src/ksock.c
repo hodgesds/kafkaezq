@@ -27,25 +27,15 @@ struct _ksock_t {
     rd_kafka_topic_conf_t *rkt_conf;
     rd_kafka_topic_partition_list_t *topiclist;
     rd_kafka_resp_err_t err;
+    zlist_t *topics;
     int run;
-    int debug;
+    bool debug;
     int32_t partition;
     int msg_size;
     char *null_str;
     char errstr[512];
+    char *group;
 };
-
-
-//  --------------------------------------------------------------------------
-//  Default error callback
-
-static void 
-s_err_callback (rd_kafka_t *rk, int err, const char *reason, void *opaque)
-{
-    const char *errstr = rd_kafka_err2str (rd_kafka_errno2err(err));
-	printf("%% ERROR CALLBACK: %s: %s: %s\n",
-	       rd_kafka_name(rk), errstr, reason);
-}
 
 
 //  --------------------------------------------------------------------------
@@ -79,7 +69,7 @@ ksock_new ()
     assert (self);
 
     self->run  = 1;
-    self->debug = 1;
+    self->debug = true;
     self->partition = RD_KAFKA_PARTITION_UA;
     self->msg_size = 1024*1024;
     self->null_str = "NULL";
@@ -87,42 +77,77 @@ ksock_new ()
     self->rk_conf = rd_kafka_conf_new ();
     self->rkt_conf = rd_kafka_topic_conf_new ();
 
-    rd_kafka_conf_set_rebalance_cb(self->rk_conf, rebalance_cb);
-    rd_kafka_conf_set_default_topic_conf (self->rk_conf, self->rkt_conf);
-   
+    self->topics = zlist_new ();
+
+  
     return self;
 }
+
+
+//  --------------------------------------------------------------------------
+//  Add a topic to our subscription list
+
+void
+ksock_set_subscribe (ksock_t *self, char *topic)
+{
+    zlist_append (self->topics, topic);
+}
+
+
+//  --------------------------------------------------------------------------
+//  Connect the socket to kafka brokers
 
 void
 ksock_connect (ksock_t *self, char *brokers)
 {
-    int rc = rd_kafka_conf_set (self->rk_conf, "metadata.broker.list", brokers, self->errstr, sizeof (self->errstr));
+    int rc = rd_kafka_conf_set (self->rk_conf, "group.id", "mygroup", self->errstr, sizeof (self->errstr));
     assert (rc == RD_KAFKA_CONF_OK);
-
-    rd_kafka_conf_set_error_cb (self->rk_conf, s_err_callback);
-    assert (rc == RD_KAFKA_CONF_OK);
-
-    struct timeval tv;
-	gettimeofday(&tv, NULL);
-	srand(tv.tv_usec);
 
     char tmp[16];
-    snprintf (tmp, sizeof (tmp), "%i", SIGIO);
+    snprintf(tmp, sizeof(tmp), "%i", SIGIO);
+	rd_kafka_conf_set(self->rk_conf, "internal.termination.signal", tmp, NULL, 0);
 
-    rd_kafka_conf_set(self->rk_conf, "internal.termination.signal", tmp, NULL, 0);
+    rc = rd_kafka_topic_conf_set (self->rkt_conf, "offset.store.method", "broker", self->errstr, sizeof (self->errstr));
+    assert (rc == RD_KAFKA_CONF_OK);
+
+    rd_kafka_conf_set_rebalance_cb(self->rk_conf, rebalance_cb);
+    rd_kafka_conf_set_default_topic_conf (self->rk_conf, self->rkt_conf);
     
-    rd_kafka_conf_set_log_cb(self->rk_conf, rd_kafka_log_print);
-
     self->rk = rd_kafka_new (RD_KAFKA_CONSUMER, self->rk_conf, self->errstr, sizeof (self->errstr));
     assert (self->rk);
+
     
-    self->rk_conf = NULL; 
-    self->rkt_conf = NULL;
+    if (self->debug)
+        rd_kafka_set_log_level (self->rk, LOG_DEBUG);
+
+    rc = rd_kafka_brokers_add (self->rk, "localhost:9092");
+    assert (rc > 0);
 
     rd_kafka_poll_set_consumer (self->rk);
-    rd_kafka_set_log_level (self->rk, LOG_DEBUG);
+
+    self->topiclist = rd_kafka_topic_partition_list_new (zlist_size (self->topics));
+    char *topic = (char *) zlist_first (self->topics);
+    while (topic) {
+        rd_kafka_topic_partition_list_add (self->topiclist, topic, -1);
+        topic = (char *) zlist_next (self->topics);
+    }
+
+    self->err = rd_kafka_subscribe (self->rk, self->topiclist);
+    if (self->err) {
+        fprintf (stderr, "%s\n", rd_kafka_err2str (self->err));
+    }
 }
 
+
+//  --------------------------------------------------------------------------
+//  Receive a message
+
+rd_kafka_message_t *
+ksock_recv (ksock_t *self)
+{
+    rd_kafka_message_t *msg = rd_kafka_consumer_poll (self->rk, 1000);
+    return msg;
+}
 
 //  --------------------------------------------------------------------------
 //  Destroy the ksock
@@ -133,8 +158,10 @@ ksock_destroy (ksock_t **self_p)
     assert (self_p);
     if (*self_p) {
         ksock_t *self = *self_p;
+        rd_kafka_consumer_close (self->rk);
+        rd_kafka_topic_partition_list_destroy (self->topiclist);
         rd_kafka_destroy (self->rk);
-
+        zlist_destroy (&self->topics);
         //  Free object itself
         free (self);
         *self_p = NULL;
@@ -151,11 +178,16 @@ ksock_test (bool verbose)
 
     //  @selftest
     //  Simple create/destroy test
+    
     ksock_t *self = ksock_new ();
     assert (self);
 
-    ksock_connect (self, "localhost");
+    ksock_set_subscribe (self, "test");
+    ksock_connect (self, "localhost:9092");
+    rd_kafka_message_t *msg = ksock_recv (self);
+    rd_kafka_message_destroy (msg);
     ksock_destroy (&self);
+
     //  @end
     printf ("OK\n");
 }

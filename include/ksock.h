@@ -22,9 +22,17 @@ extern "C" {
 KAFKAEZQ_EXPORT ksock_t *
     ksock_new (void);
 
+// Subscribe to a topic
+KAFKAEZQ_EXPORT void
+    ksock_set_subscribe (ksock_t *self, char *topic);
+
 // Connect the ksock
 KAFKAEZQ_EXPORT void
     ksock_connect (ksock_t *self, char *brokers);
+
+// Receive a message
+KAFKAEZQ_EXPORT rd_kafka_message_t *
+    ksock_recv (ksock_t *self);
 
 //  Destroy the ksock
 KAFKAEZQ_EXPORT void
