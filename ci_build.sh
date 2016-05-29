@@ -71,19 +71,6 @@ if [ "$BUILD_TYPE" == "default" ]; then
     if [ -e buildconf ]; then
         ./buildconf 2> /dev/null
     fi
-    git clone --quiet --depth 1 https://github.com/edenhill/kafkacat kafkacat
-    cd kafkacat
-    git --no-pager log --oneline -n1
-    if [ -e autogen.sh ]; then
-        ./autogen.sh 2> /dev/null
-    fi
-    if [ -e buildconf ]; then
-        ./buildconf 2> /dev/null
-    fi
-    ./configure "${CONFIG_OPTS[@]}"
-    make -j4
-    make install
-    cd ..
 
     CONFIG_OPTS=()
     CONFIG_OPTS+=("--CFLAGS=-I${BUILD_PREFIX}/include")
