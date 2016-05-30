@@ -29,6 +29,7 @@ static test_item_t
 all_tests [] = {
 #ifdef KAFKAEZQ_BUILD_DRAFT_API
     { "ksock", ksock_test },
+    { "kmsg", kmsg_test },
 #endif // KAFKAEZQ_BUILD_DRAFT_API
     {0, 0}          //  Sentinel
 };
@@ -87,7 +88,7 @@ main (int argc, char **argv)
         else
         if (streq (argv [argn], "--number")
         ||  streq (argv [argn], "-n")) {
-            puts ("1");
+            puts ("2");
             return 0;
         }
         else
@@ -95,6 +96,7 @@ main (int argc, char **argv)
         ||  streq (argv [argn], "-l")) {
             puts ("Available tests:");
             puts ("    ksock");
+            puts ("    kmsg");
             return 0;
         }
         else

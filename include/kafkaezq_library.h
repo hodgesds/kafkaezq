@@ -58,12 +58,15 @@
 #ifdef KAFKAEZQ_BUILD_DRAFT_API
 typedef struct _ksock_t ksock_t;
 #define KSOCK_T_DEFINED
+typedef struct _kmsg_t kmsg_t;
+#define KMSG_T_DEFINED
 #endif // KAFKAEZQ_BUILD_DRAFT_API
 
 
 //  Public classes, each with its own header file
 #ifdef KAFKAEZQ_BUILD_DRAFT_API
 #include "ksock.h"
+#include "kmsg.h"
 #endif // KAFKAEZQ_BUILD_DRAFT_API
 
 #endif

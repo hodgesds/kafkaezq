@@ -4,7 +4,7 @@ Name(7)
 
 NAME
 ----
-ksock - kafka socket
+kmsg - kafka message
 
 
 SYNOPSIS
