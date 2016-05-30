@@ -18,7 +18,8 @@ include_HEADERS = \
 
 if ENABLE_DRAFTS
 include_HEADERS += \
-    include/ksock.h
+    include/ksock.h \
+    include/kmsg.h
 
 endif
 src_libkafkaezq_la_SOURCES = \
@@ -26,7 +27,8 @@ src_libkafkaezq_la_SOURCES = \
 
 if ENABLE_DRAFTS
 src_libkafkaezq_la_SOURCES += \
-    src/ksock.c
+    src/ksock.c \
+    src/kmsg.c
 
 endif
 
