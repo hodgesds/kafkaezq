@@ -22,7 +22,7 @@
 //  Structure of our class
 
 struct _kmsg_t {
-    int filler;     //  Declare class properties here
+    rd_kafka_message_t *msg;
 };
 
 
@@ -48,7 +48,10 @@ kmsg_destroy (kmsg_t **self_p)
     assert (self_p);
     if (*self_p) {
         kmsg_t *self = *self_p;
-        //  Free class properties here
+
+        if (self->msg)
+            rd_kafka_message_destroy (self->msg); 
+        
         //  Free object itself
         free (self);
         *self_p = NULL;
