@@ -19,6 +19,34 @@
 
 #include "kafkaezq_classes.h"
 
+static void 
+dump (const char *name, const void *ptr, size_t len)
+{
+    const char *p = (const char *)ptr;
+    unsigned int of = 0;
+
+
+    if (name) {
+        zproc_log_notice ("%s ump (%zd bytes):\n", name, len);
+    }
+
+    for (of = 0 ; of < len ; of += 16) {
+        char hexen[16*3+1];
+        char charen[16+1];
+        int hof = 0;
+
+        int cof = 0;
+        int i;
+
+        for (i = of ; i < (int)of + 16 && i < (int)len ; i++) {
+            hof += sprintf(hexen+hof, "%02x ", p[i] & 0xff);
+            cof += sprintf(charen+cof, "%c", isprint((int)p[i]) ? p[i] : '.');
+        }
+        zproc_log_notice ("%08x: %-48s %-16s\n", of, hexen, charen);
+    }
+}
+
+
 //  Structure of our class
 
 struct _ksock_t {
@@ -29,6 +57,9 @@ struct _ksock_t {
     rd_kafka_resp_err_t err;
     zlist_t *topics;
     int run;
+    int exit_eof;
+    int wait_eof;
+    int quiet;
     bool debug;
     int32_t partition;
     int msg_size;
@@ -44,12 +75,12 @@ struct _ksock_t {
 static void
 rebalance_cb (rd_kafka_t *rk, rd_kafka_resp_err_t err, rd_kafka_topic_partition_list_t *partitions, void *opaque)
 {
-	switch (err) {
-	    case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
-		    rd_kafka_assign(rk, partitions);
-		    break;
+    switch (err) {
+        case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
+            rd_kafka_assign(rk, partitions);
+            break;
 
-	    case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
+        case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
             rd_kafka_assign(rk, NULL);
             break;
 
@@ -65,10 +96,14 @@ rebalance_cb (rd_kafka_t *rk, rd_kafka_resp_err_t err, rd_kafka_topic_partition_
 ksock_t *
 ksock_new ()
 {
+    zsys_init ();
     ksock_t *self = (ksock_t *) zmalloc (sizeof (ksock_t));
     assert (self);
 
     self->run  = 1;
+    self->exit_eof = 0;
+    self->wait_eof = 0;
+    self->quiet = 0;
     self->debug = true;
     self->partition = RD_KAFKA_PARTITION_UA;
     self->msg_size = 1024*1024;
@@ -91,6 +126,67 @@ void
 ksock_set_subscribe (ksock_t *self, char *topic)
 {
     zlist_append (self->topics, topic);
+}
+
+
+void 
+zsock_handle_msg (ksock_t *self, rd_kafka_message_t *msg, void *opaque)
+{
+    if (msg->err) {
+        if (msg->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
+            zproc_log_notice ("Consumer reached end of %s [%"PRId32"] "
+                    "message queue at offset %"PRId64"\n",
+                    rd_kafka_topic_name(msg->rkt),
+                    msg->partition, msg->offset);
+
+            if (self->exit_eof && --self->wait_eof == 0) {
+                zproc_log_notice ("All parition(s) reached EOF: exiting\n");
+                self->run = 0;
+            }
+            return;
+        }
+
+        if (msg->rkt) {
+            zproc_log_notice (
+                    "Consume error for "
+                    "topic \"%s\" [%"PRId32"] "
+                    "offset %"PRId64": %s\n",
+                    rd_kafka_topic_name(msg->rkt),
+                    msg->partition,
+                    msg->offset,
+                    rd_kafka_message_errstr(msg));
+        }
+
+        else {
+            zproc_log_notice (
+                    "Consumer error: %s: %s\n",
+                    rd_kafka_err2str(msg->err),
+                    rd_kafka_message_errstr(msg));
+        }
+
+        if (msg->err == RD_KAFKA_RESP_ERR__UNKNOWN_PARTITION ||
+                    msg->err == RD_KAFKA_RESP_ERR__UNKNOWN_TOPIC) {
+            self->run = 0;
+            return;
+        }
+    }
+
+    if (!self->quiet) {
+        zproc_log_notice (
+                "Message (topic %s [%"PRId32"], "
+                "offset %"PRId64", %zd bytes):\n",
+                rd_kafka_topic_name(msg->rkt),
+                msg->partition,
+                msg->offset, msg->len);
+    }
+
+    if (msg->key_len) {
+            dump("Message Key", msg->key, msg->key_len);
+    }
+
+    dump("Message Payload", msg->payload, msg->len);
+
+    return;
 }
 
 
@@ -125,7 +221,9 @@ ksock_connect (ksock_t *self, char *brokers)
 
     rd_kafka_poll_set_consumer (self->rk);
 
-    self->topiclist = rd_kafka_topic_partition_list_new (zlist_size (self->topics));
+    self->topiclist = rd_kafka_topic_partition_list_new (1);
+    // rd_kafka_topic_partition_list_add (self->topiclist, "test", -1);
+    
     char *topic = (char *) zlist_first (self->topics);
     while (topic) {
         rd_kafka_topic_partition_list_add (self->topiclist, topic, -1);
@@ -145,7 +243,7 @@ ksock_connect (ksock_t *self, char *brokers)
 rd_kafka_message_t *
 ksock_recv (ksock_t *self)
 {
-    rd_kafka_message_t *msg = rd_kafka_consumer_poll (self->rk, 1000);
+    rd_kafka_message_t *msg = rd_kafka_consumer_poll (self->rk, 5000);
     return msg;
 }
 
@@ -185,9 +283,9 @@ ksock_test (bool verbose)
     ksock_set_subscribe (self, "test");
     ksock_connect (self, "localhost:9092");
     rd_kafka_message_t *msg = ksock_recv (self);
-    rd_kafka_message_destroy (msg);
+    zsock_handle_msg (self, msg, NULL);
+    printf ("message handled\n");
     ksock_destroy (&self);
-
     //  @end
     printf ("OK\n");
 }
