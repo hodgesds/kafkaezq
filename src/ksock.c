@@ -62,10 +62,8 @@ struct _ksock_t {
     int quiet;
     bool debug;
     int32_t partition;
-    int msg_size;
-    char *null_str;
     char errstr[512];
-    char *group;
+    const char *group;
 };
 
 
@@ -106,8 +104,6 @@ ksock_new ()
     self->quiet = 0;
     self->debug = true;
     self->partition = RD_KAFKA_PARTITION_UA;
-    self->msg_size = 1024*1024;
-    self->null_str = "NULL";
     
     self->rk_conf = rd_kafka_conf_new ();
     self->rkt_conf = rd_kafka_topic_conf_new ();
@@ -117,6 +113,18 @@ ksock_new ()
   
     return self;
 }
+
+
+//  --------------------------------------------------------------------------
+//  Set a consumer group
+
+void
+ksock_set_group (ksock_t *self, const char *group)
+{
+    self->group = group;
+}
+
+
 
 
 //  --------------------------------------------------------------------------
@@ -196,7 +204,7 @@ zsock_handle_msg (ksock_t *self, rd_kafka_message_t *msg, void *opaque)
 void
 ksock_connect (ksock_t *self, char *brokers)
 {
-    int rc = rd_kafka_conf_set (self->rk_conf, "group.id", "mygroup", self->errstr, sizeof (self->errstr));
+    int rc = rd_kafka_conf_set (self->rk_conf, "group.id", self->group, self->errstr, sizeof (self->errstr));
     assert (rc == RD_KAFKA_CONF_OK);
 
     char tmp[16];
@@ -221,8 +229,7 @@ ksock_connect (ksock_t *self, char *brokers)
 
     rd_kafka_poll_set_consumer (self->rk);
 
-    self->topiclist = rd_kafka_topic_partition_list_new (1);
-    // rd_kafka_topic_partition_list_add (self->topiclist, "test", -1);
+    self->topiclist = rd_kafka_topic_partition_list_new (zlist_size (self->topics));
     
     char *topic = (char *) zlist_first (self->topics);
     while (topic) {
@@ -280,8 +287,10 @@ ksock_test (bool verbose)
     ksock_t *self = ksock_new ();
     assert (self);
 
+    ksock_set_group (self, "mygroup");
     ksock_set_subscribe (self, "test");
     ksock_connect (self, "localhost:9092");
+
     rd_kafka_message_t *msg = ksock_recv (self);
     zsock_handle_msg (self, msg, NULL);
     printf ("message handled\n");

@@ -20,7 +20,11 @@ extern "C" {
 //  @interface
 //  Create a new ksock
 KAFKAEZQ_EXPORT ksock_t *
-    ksock_new (void);
+    ksock_new ();
+
+// Set consumer group
+KAFKAEZQ_EXPORT void
+    ksock_set_group (ksock_t *self, const char *group);
 
 // Subscribe to a topic
 KAFKAEZQ_EXPORT void
