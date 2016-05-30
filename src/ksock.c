@@ -224,7 +224,7 @@ ksock_connect (ksock_t *self, char *brokers)
     if (self->debug)
         rd_kafka_set_log_level (self->rk, LOG_DEBUG);
 
-    rc = rd_kafka_brokers_add (self->rk, "localhost:9092");
+    rc = rd_kafka_brokers_add (self->rk, brokers);
     assert (rc > 0);
 
     rd_kafka_poll_set_consumer (self->rk);
@@ -293,7 +293,8 @@ ksock_test (bool verbose)
 
     rd_kafka_message_t *msg = ksock_recv (self);
     zsock_handle_msg (self, msg, NULL);
-    printf ("message handled\n");
+    rd_kafka_message_destroy (msg);
+
     ksock_destroy (&self);
     //  @end
     printf ("OK\n");
